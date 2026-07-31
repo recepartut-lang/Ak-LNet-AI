@@ -9,89 +9,114 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(203, 213, 225, 0.8); border-radius: 3px; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 h-screen flex overflow-hidden">
 
-    <!-- Sol Menü -->
+    <!-- Sol Menü (Sekmeler, Arama ve Görsel Galerisi) -->
     <aside class="w-72 bg-white border-r border-gray-200 flex flex-col justify-between transition-all duration-300 z-20 shadow-sm shrink-0">
         <div>
+            <!-- Üst Kısım -->
             <div class="p-4 border-b border-gray-100 flex flex-col gap-3">
                 <div class="flex items-center justify-between">
                     <h1 class="font-bold text-xl text-blue-600 tracking-tight">Nexora AI</h1>
-                    <button onclick="toggleAuthModal()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-lg border border-blue-200 transition">Giriş / Kayıt</button>
                 </div>
                 <button onclick="startNewChat()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-md shadow-blue-600/10 text-sm">
-                    <span>+</span> Yeni Sohbet / Makale
+                    <span>+</span> Yeni Sohbet
                 </button>
             </div>
 
-            <!-- Kullanıcı Durumu ve Planı -->
-            <div class="p-3 m-3 bg-blue-50 border border-blue-100 rounded-2xl space-y-2">
-                <div class="flex justify-between items-center text-xs font-semibold text-blue-900">
-                    <span id="userNameDisplay">Misafir Kullanıcı</span>
-                    <button onclick="openPricingModal()" class="text-blue-600 hover:underline font-bold">Paketler 🚀</button>
-                </div>
-                <div class="space-y-1 text-xs text-gray-600">
-                    <div class="flex justify-between"><span>Aktif Paket:</span> <span id="currentPlanBadge" class="font-bold text-blue-700">Free (Ücretsiz)</span></div>
-                    <div class="flex justify-between"><span>Model:</span> <span class="font-bold text-gray-900">GPT-5.5 / Gemini</span></div>
-                </div>
+            <!-- Sohbetlerde Arama Çubuğu -->
+            <div class="p-3 border-b border-gray-100">
+                <input type="text" id="searchChatInput" placeholder="Sohbetlerde ara..." onkeyup="filterChats()" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
             </div>
 
-            <div class="px-3 space-y-1 border-t border-gray-100 pt-3">
-                <button onclick="setPromptMode('Akademik tarzda kapsamlı bir makale yaz: ')" class="w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition">Makale Sihirbazı</button>
-                <button onclick="openPricingModal()" class="w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-blue-600 hover:bg-blue-50 transition">💎 Tüm Planlar & Fiyatlar</button>
+            <!-- Ana Sekmeler -->
+            <div class="px-3 py-2 space-y-1">
+                <button onclick="switchTab('chat')" id="tabChat" class="w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-blue-600 bg-blue-50 transition flex items-center gap-2">💬 Sohbetler</button>
+                <button onclick="switchTab('gallery')" id="tabGallery" class="w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition flex items-center gap-2">🖼️ Görsel Deposu (<span id="galleryCount">0</span>)</button>
+                <button onclick="openPricingModal()" class="w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-amber-600 hover:bg-amber-50 transition flex items-center gap-2">💎 Ücretli Planlar & Halkbank</button>
+            </div>
+
+            <!-- Geçmiş Sohbetler Listesi -->
+            <div id="chatHistoryList" class="px-3 py-2 space-y-1 overflow-y-auto max-h-64 custom-scrollbar text-xs">
+                <!-- Dinamik dolacak -->
             </div>
         </div>
 
-        <div class="p-3 border-t border-gray-100 text-xs text-gray-500 flex items-center justify-between bg-gray-50">
-            <span class="font-medium text-gray-700">Recep Artut Pro</span>
-            <span class="text-blue-600 font-semibold">Suluova / TR</span>
+        <!-- Alt Bilgi ve Kullanıcı -->
+        <div class="p-3 border-t border-gray-100 bg-gray-50 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+                <span id="userNameDisplay" class="font-semibold text-gray-800 truncate max-w-[120px]">Misafir Kullanıcı</span>
+                <span id="currentPlanBadge" class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">Free</span>
+            </div>
+            <div class="text-[10px] text-gray-500 flex justify-between">
+                <span>Recep Artut Pro</span>
+                <span class="text-blue-600">Suluova / TR</span>
+            </div>
         </div>
     </aside>
 
-    <!-- Ana İçerik -->
+    <!-- Ana İçerik Alanı -->
     <main class="flex-1 flex flex-col h-full bg-white relative">
-        <header class="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white/85 backdrop-blur shadow-sm">
-            <span class="font-semibold text-gray-800 text-lg">Nexora Yapay Zeka Stüdyosu</span>
-            <button onclick="openPricingModal()" class="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow transition">👑 Go & Plus Planları</button>
+        <!-- Üst Başlık ve Sağ Üst Giriş/Kayıt Sekmesi -->
+        <header class="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white/85 backdrop-blur shadow-sm shrink-0">
+            <span id="headerTitle" class="font-semibold text-gray-800 text-lg">Yapay Zeka Sohbet Stüdyosu</span>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="openPricingModal()" class="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow transition">👑 Go & Plus Yükselt</button>
+                <button onclick="toggleAuthModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow transition">Giriş / Kayıt Ol</button>
+            </div>
         </header>
 
-        <div id="chatContainer" class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-gray-50/50">
-            <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto space-y-4">
-                <div class="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl font-bold shadow-xl">AI</div>
-                <h2 class="text-2xl font-bold text-gray-900">Nexora Yapay Zeka Stüdyosuna Hoş Geldiniz</h2>
-                <p class="text-gray-600 text-sm leading-relaxed">Hemen aşağıdan mesajınızı yazın, yapay zeka asistanımız sizinle anında etkileşime geçsin!</p>
+        <!-- İçerik Ekranı (Sohbet veya Görsel Galerisi) -->
+        <div id="mainContentArea" class="flex-1 flex flex-col overflow-hidden">
+            <!-- Sohbet Akışı -->
+            <div id="chatContainer" class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-gray-50/50">
+                <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto space-y-4">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl font-bold shadow-xl">AI</div>
+                    <h2 class="text-2xl font-bold text-gray-900">Nexora Yapay Zeka Paneline Hoş Geldiniz</h2>
+                    <p class="text-gray-600 text-sm leading-relaxed">Aşağıdan mesajınızı yazın veya görsel oluşturun. Tüm içerikleriniz güvenle saklanır!</p>
+                </div>
             </div>
-        </div>
 
-        <div class="p-4 bg-white border-t border-gray-200 shadow-lg">
-            <div class="max-w-4xl mx-auto relative flex items-center">
-                <textarea id="userInput" rows="1" placeholder="Yapay zekaya bir şeyler sorun veya makale konusu yazın..." onkeydown="handleKeyPress(event)" class="w-full bg-gray-50 border border-gray-300 rounded-2xl pl-4 pr-14 py-3 text-gray-900 focus:outline-none focus:border-blue-500 resize-none max-h-32 shadow-inner"></textarea>
-                <button onclick="sendMessage()" class="absolute right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">➤</button>
+            <!-- Görsel Deposu Alanı (Gizli Başlangıçta) -->
+            <div id="galleryContainer" class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-gray-50/50 hidden">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">Depolanan Yapay Zeka Görselleri</h3>
+                <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <p class="text-xs text-gray-500 col-span-full">Henüz depolanmış bir görsel bulunmuyor.</p>
+                </div>
+            </div>
+
+            <!-- Mesaj Yazma Paneli -->
+            <div id="inputAreaBox" class="p-4 bg-white border-t border-gray-200 shadow-lg shrink-0">
+                <div class="max-w-4xl mx-auto relative flex items-center gap-2">
+                    <textarea id="userInput" rows="1" placeholder="Mesajınızı yazın veya 'Görsel oluştur: ...' deyin..." onkeydown="handleKeyPress(event)" class="w-full bg-gray-50 border border-gray-300 rounded-2xl pl-4 pr-14 py-3 text-gray-900 focus:outline-none focus:border-blue-500 resize-none max-h-32 shadow-inner"></textarea>
+                    <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-2xl transition shadow-md shrink-0">➤</button>
+                </div>
             </div>
         </div>
     </main>
 
-    <!-- Giriş Yap / Kaydol Modalı (Gerçek Yönlendirmeli) -->
+    <!-- Giriş / Kayıt Modalı (Google, Microsoft, iOS ve E-posta Bağlantıları) -->
     <div id="authModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm hidden items-center justify-center z-50">
         <div class="bg-white rounded-3xl w-full max-w-md p-8 space-y-5 shadow-2xl relative">
             <div class="flex justify-between items-center">
-                <h3 class="text-xl font-bold text-gray-900">Giriş Yap veya Kaydol</h3>
+                <h3 class="text-xl font-bold text-gray-900">Hesabınıza Bağlanın</h3>
                 <button onclick="toggleAuthModal()" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
             </div>
             
             <div class="space-y-3">
                 <button onclick="socialLogin('Google')" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 rounded-xl transition shadow-sm text-sm">
-                    <span class="font-bold text-red-500">G</span> Google ile Devam Et
+                    <span class="font-bold text-red-500">G</span> Google ile Bağlan
                 </button>
                 <button onclick="socialLogin('Microsoft')" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 rounded-xl transition shadow-sm text-sm">
-                    <span class="font-bold text-blue-600">M</span> Microsoft ile Devam Et
+                    <span class="font-bold text-blue-600">M</span> Microsoft ile Bağlan
                 </button>
                 <button onclick="socialLogin('Apple')" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 rounded-xl transition shadow-sm text-sm">
-                    <span class="font-bold text-gray-900">🍎</span> Apple ile Devam Et
+                    <span class="font-bold text-gray-900">🍎</span> iOS (Apple) ile Bağlan
                 </button>
             </div>
 
@@ -104,18 +129,18 @@
             <div class="space-y-3">
                 <input type="email" id="emailInput" placeholder="E-posta adresiniz" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
                 <input type="password" id="passwordInput" placeholder="Şifreniz" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
-                <button onclick="emailLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">E-posta ile Devam Et</button>
+                <button onclick="emailLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">E-posta ile Bağlan</button>
             </div>
         </div>
     </div>
 
-    <!-- Planlar ve Fiyatlandırma Modalı (Halkbank IBAN Dahil) -->
+    <!-- Ücretli Planlar ve Halkbank Ödeme Modalı -->
     <div id="pricingModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm hidden items-center justify-center z-50">
         <div class="bg-white rounded-3xl w-full max-w-5xl p-8 space-y-6 shadow-2xl max-h-[95vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center">
                 <div>
-                    <h3 class="text-2xl font-bold text-gray-900">Yapay Zeka Planları & Fiyatlar</h3>
-                    <p class="text-sm text-gray-500">İhtiyacınıza uygun planı seçin, Halkbank hesabınızla hemen aktif edin.</p>
+                    <h3 class="text-2xl font-bold text-gray-900">Yapay Zeka Paketleri & Ödeme</h3>
+                    <p class="text-sm text-gray-500">Halkbank üzerinden ödemenizi tamamlayın, seçtiğiniz paket anında aktifleşsin.</p>
                 </div>
                 <button onclick="openPricingModal()" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
             </div>
@@ -129,10 +154,9 @@
                         <ul class="text-xs text-gray-600 space-y-2">
                             <li>✓ Temel model erişimi</li>
                             <li>✓ Sınırlı mesaj hakkı</li>
-                            <li>✓ Standart yanıt hızı</li>
                         </ul>
                     </div>
-                    <button onclick="selectPlan('Free', 0)" class="w-full bg-gray-200 text-gray-800 py-3 rounded-xl text-sm font-semibold">Mevcut Plan</button>
+                    <button onclick="selectPlan('Free (Ücretsiz)', 0)" class="w-full bg-gray-200 text-gray-800 py-3 rounded-xl text-sm font-semibold">Mevcut Plan</button>
                 </div>
 
                 <!-- Go Plan -->
@@ -140,14 +164,12 @@
                     <div class="space-y-3">
                         <h4 class="font-bold text-xl text-blue-900">Standart Üyelik (Go)</h4>
                         <div class="text-2xl font-extrabold text-blue-600">119 ₺<span class="text-xs text-gray-500 font-normal"> / ay</span></div>
-                        <div class="text-xs text-blue-800 font-semibold">Yıllık: 999 ₺</div>
                         <ul class="text-xs text-gray-600 space-y-2">
                             <li>⭐ 6 Görsel Oluşturma</li>
-                            <li>⭐ 1 Video Oluşturma (8 sn.)</li>
-                            <li>✓ Daha yüksek limitler</li>
+                            <li>⭐ Görsel Depolama Alanı</li>
                         </ul>
                     </div>
-                    <button onclick="selectPlan('Go (Standart)', 119)" class="w-full bg-blue-600 text-white py-3 rounded-xl text-sm font-semibold shadow">Go Planını Seç (119 TL)</button>
+                    <button onclick="selectPlan('Go (Standart)', 119)" class="w-full bg-blue-600 text-white py-3 rounded-xl text-sm font-semibold shadow">Go Planını Seç ve Öde</button>
                 </div>
 
                 <!-- Plus Plan -->
@@ -156,14 +178,12 @@
                     <div class="space-y-3">
                         <h4 class="font-bold text-xl text-gray-900">Plus (En Popüler)</h4>
                         <div class="text-2xl font-extrabold text-blue-600">299 ₺<span class="text-xs text-gray-500 font-normal"> / ay</span></div>
-                        <div class="text-xs text-blue-800 font-semibold">Yıllık: 2.499 ₺</div>
                         <ul class="text-xs text-gray-600 space-y-2">
                             <li>🚀 Gelişmiş Modeller & Terra</li>
-                            <li>🚀 Sınırsıza yakın limitler</li>
-                            <li>🚀 Derin Araştırma (Deep Research)</li>
+                            <li>🚀 Sınırsız Görsel & Depolama</li>
                         </ul>
                     </div>
-                    <button onclick="selectPlan('Plus', 299)" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl text-sm font-semibold shadow">Plus Abonesi Ol (299 TL)</button>
+                    <button onclick="selectPlan('Plus', 299)" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl text-sm font-semibold shadow">Plus Abonesi Ol ve Öde</button>
                 </div>
             </div>
 
@@ -175,74 +195,153 @@
                         <p><strong>Hesap Sahibi:</strong> RECEP ARTUT</p>
                         <p><strong>IBAN:</strong> TR18 0001 2001 2020 0001 1238 15</p>
                     </div>
-                    <div class="text-green-700 font-bold">Havale / EFT ile Aktifleşir</div>
+                    <div class="text-green-700 font-bold">Havale Sonrası Anında Aktifleşir</div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- API Anahtarı İsteme Modalı (Sayfa Açılır Açılmaz Çalışır) -->
+    <div id="apiKeyModal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-md flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl w-full max-w-md p-8 space-y-5 shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-900">🔑 Gemini API Anahtarı Gerekli</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">Platformu kullanmaya başlamak ve yapay zeka yanıtları alabilmek için lütfen geçerli bir Google Gemini API anahtarı girin.</p>
+            <input type="password" id="modalApiKeyInput" placeholder="AIzaSy..." class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+            <button onclick="saveApiKeyFromModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">Anahtarı Kaydet ve Başla</button>
+        </div>
+    </div>
+
     <script>
-        // Yerleşik API Anahtarı (Kullanıcının girmesine gerek kalmadan doğrudan çalışır)
-        const apiKey = "AIzaSyD-..." /* Buraya kendi aktif Gemini API anahtarınızı yapıştırabilirsiniz */;
-        
+        let apiKey = localStorage.getItem('nexora_gemini_key') || '';
         let currentUser = JSON.parse(localStorage.getItem('nexora_user')) || { name: 'Misafir Kullanıcı', plan: 'Free (Ücretsiz)' };
+        let chatHistory = JSON.parse(localStorage.getItem('nexora_chats')) || [];
+        let galleryImages = JSON.parse(localStorage.getItem('nexora_gallery')) || [];
+
+        // Sayfa açılışında API anahtarı kontrolü
+        window.onload = function() {
+            if(!apiKey) {
+                document.getElementById('apiKeyModal').classList.remove('hidden');
+            }
+            updateUI();
+            renderGallery();
+        };
+
+        function saveApiKeyFromModal() {
+            const key = document.getElementById('modalApiKeyInput').value.trim();
+            if(!key) { alert('Lütfen geçerli bir API anahtarı girin.'); return; }
+            localStorage.setItem('nexora_gemini_key', key);
+            apiKey = key;
+            document.getElementById('apiKeyModal').classList.add('hidden');
+            alert('API anahtarı kaydedildi. Platform kullanıma hazır!');
+        }
 
         function updateUI() {
             document.getElementById('userNameDisplay').innerText = currentUser.name;
             document.getElementById('currentPlanBadge').innerText = currentUser.plan;
+            document.getElementById('galleryCount').innerText = galleryImages.length;
         }
-        updateUI();
 
         function toggleAuthModal() { document.getElementById('authModal').classList.toggle('hidden'); document.getElementById('authModal').classList.toggle('flex'); }
         function openPricingModal() { document.getElementById('pricingModal').classList.toggle('hidden'); document.getElementById('pricingModal').classList.toggle('flex'); }
 
-        // Sosyal Giriş Yönlendirmeleri
+        // Sosyal Medya Yönlendirmeleri
         function socialLogin(provider) {
-            if(provider === 'Google') {
-                window.location.href = "https://accounts.google.com/signin";
-            } else if(provider === 'Microsoft') {
-                window.location.href = "https://login.microsoftonline.com/";
-            } else if(provider === 'Apple') {
-                window.location.href = "https://appleid.apple.com/";
-            }
+            if(provider === 'Google') window.location.href = "https://accounts.google.com/signin";
+            else if(provider === 'Microsoft') window.location.href = "https://login.microsoftonline.com/";
+            else if(provider === 'Apple') window.location.href = "https://appleid.apple.com/";
         }
 
         function emailLogin() {
             const email = document.getElementById('emailInput').value.trim();
-            if(!email) { alert('Lütfen e-posta adresinizi girin.'); return; }
+            if(!email) { alert('Lütfen e-posta girin.'); return; }
             currentUser.name = email.split('@')[0];
             localStorage.setItem('nexora_user', JSON.stringify(currentUser));
             updateUI();
             toggleAuthModal();
-            alert('Giriş / Kayıt başarılı!');
+            alert('E-posta ile bağlantı başarılı!');
         }
 
+        // Ödeme ve Plan Aktivasyonu
         function selectPlan(planName, price) {
             currentUser.plan = planName;
             localStorage.setItem('nexora_user', JSON.stringify(currentUser));
             updateUI();
             openPricingModal();
-            alert(`${planName} seçildi. Halkbank (TR18 0001 2001 2020 0001 1238 15) üzerinden ${price} TL ödemeniz onaylandığında aktifleşecektir.`);
+            alert(`${planName} seçildi! Halkbank (TR18 0001 2001 2020 0001 1238 15) üzerinden ${price} TL ödemeniz yapıldığında hesabınız anında tam yetkiyle aktifleşecektir.`);
         }
 
-        function setPromptMode(p) { document.getElementById('userInput').value = p; document.getElementById('userInput').focus(); }
+        // Sekme Değiştirme (Sohbet / Görsel Galerisi)
+        function switchTab(tab) {
+            const chatCont = document.getElementById('chatContainer');
+            const galleryCont = document.getElementById('galleryContainer');
+            const inputArea = document.getElementById('inputAreaBox');
+            const title = document.getElementById('headerTitle');
+
+            if(tab === 'chat') {
+                chatCont.classList.remove('hidden');
+                galleryCont.classList.add('hidden');
+                inputArea.classList.remove('hidden');
+                title.innerText = "Yapay Zeka Sohbet Stüdyosu";
+                document.getElementById('tabChat').className = "w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-blue-600 bg-blue-50 transition flex items-center gap-2";
+                document.getElementById('tabGallery').className = "w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition flex items-center gap-2";
+            } else {
+                chatCont.classList.add('hidden');
+                galleryCont.classList.remove('hidden');
+                inputArea.classList.add('hidden');
+                title.innerText = "Depolanan Görsel Atölyesi";
+                document.getElementById('tabGallery').className = "w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-blue-600 bg-blue-50 transition flex items-center gap-2";
+                document.getElementById('tabChat').className = "w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition flex items-center gap-2";
+                renderGallery();
+            }
+        }
+
         function startNewChat() {
+            switchTab('chat');
             document.getElementById('chatContainer').innerHTML = `
                 <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto space-y-4">
                     <div class="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl font-bold shadow-xl">AI</div>
-                    <h2 class="text-2xl font-bold text-gray-900">Nexora Yapay Zeka Stüdyosuna Hoş Geldiniz</h2>
-                    <p class="text-gray-600 text-sm leading-relaxed">Hemen aşağıdan mesajınızı yazın, yapay zeka asistanımız sizinle anında etkileşime geçsin!</p>
+                    <h2 class="text-2xl font-bold text-gray-900">Yeni Sohbet Oturumu</h2>
+                    <p class="text-gray-600 text-sm leading-relaxed">Sorunuzu yazarak yeni bir oturum başlatabilirsiniz.</p>
                 </div>
             `;
         }
 
+        // Sohbetlerde Arama Fonksiyonu
+        function filterChats() {
+            const query = document.getElementById('searchChatInput').value.toLowerCase();
+            const filtered = chatHistory.filter(c => c.text.toLowerCase().includes(query));
+            const list = document.getElementById('chatHistoryList');
+            list.innerHTML = filtered.map(c => `<div class="p-2 hover:bg-gray-100 rounded-lg cursor-pointer truncate text-gray-700">${c.text}</div>`).join('');
+        }
+
+        // Görsel Galerisini Render Etme
+        function renderGallery() {
+            const grid = document.getElementById('galleryGrid');
+            if(galleryImages.length === 0) {
+                grid.innerHTML = `<p class="text-xs text-gray-500 col-span-full">Henüz depolanmış bir görsel bulunmuyor.</p>`;
+                return;
+            }
+            grid.innerHTML = galleryImages.map(img => `
+                <div class="bg-white border border-gray-200 rounded-2xl p-2 shadow-sm space-y-1">
+                    <img src="${img.url}" class="w-full h-32 object-cover rounded-xl" alt="Görsel">
+                    <p class="text-[10px] text-gray-600 truncate">${img.prompt}</p>
+                </div>
+            `).join('');
+        }
+
         function handleKeyPress(e) { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
 
+        // Gerçek API ile Mesaj Gönderme ve Görsel Depolama Simülasyonu
         async function sendMessage() {
+            if(!apiKey) { alert('API anahtarı tanımlı değil!'); return; }
+
             const input = document.getElementById('userInput');
             const text = input.value.trim();
             if(!text) return;
             input.value = '';
+
+            chatHistory.push({ text: text });
+            localStorage.setItem('nexora_chats', JSON.stringify(chatHistory));
 
             const container = document.getElementById('chatContainer');
             if(document.getElementById('welcomeScreen')) document.getElementById('welcomeScreen').remove();
@@ -253,8 +352,15 @@
             container.innerHTML += `<div id="${loadingId}" class="flex justify-start mb-4"><div class="bg-white border border-gray-200 text-gray-600 rounded-2xl px-5 py-3 text-sm shadow-sm">Yapay zeka yanıtı hazırlanıyor...</div></div>`;
             container.scrollTop = container.scrollHeight;
 
+            // Eğer kullanıcı görsel istediyse depoya ekle
+            if(text.toLowerCase().includes('görsel oluştur') || text.toLowerCase().includes('fotoğraf')) {
+                const sampleImg = { prompt: text, url: 'https://picsum.photos/400/300?random=' + Date.now() };
+                galleryImages.push(sampleImg);
+                localStorage.setItem('nexora_gallery', JSON.stringify(galleryImages));
+                updateUI();
+            }
+
             try {
-                // Eğer kendi anahtarınızı direkt buraya koyduysanız canlı çalışacaktır
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -268,11 +374,11 @@
                     const reply = data.candidates[0].content.parts[0].text;
                     container.innerHTML += `<div class="flex justify-start mb-4"><div class="bg-white border border-gray-200 text-gray-900 rounded-2xl px-5 py-3 text-sm shadow-sm leading-relaxed">${marked.parse(reply)}</div></div>`;
                 } else {
-                    container.innerHTML += `<div class="flex justify-start mb-4"><div class="bg-white border border-gray-200 text-gray-900 rounded-2xl px-5 py-3 text-sm shadow-sm">Test Modu Yanıtı: "${text}" mesajınız alındı. Sİstemin API bağlantısı aktif!</div></div>`;
+                    container.innerHTML += `<div class="flex justify-start mb-4"><div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-3 text-sm">API Yanıt Hatası. Lütfen anahtarınızı kontrol edin.</div></div>`;
                 }
             } catch (error) {
                 document.getElementById(loadingId).remove();
-                container.innerHTML += `<div class="flex justify-start mb-4"><div class="bg-white border border-gray-200 text-gray-900 rounded-2xl px-5 py-3 text-sm shadow-sm">Mesajınız işlendi: ${text}</div></div>`;
+                container.innerHTML += `<div class="flex justify-start mb-4"><div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-3 text-sm">Bağlantı hatası oluştu.</div></div>`;
             }
             container.scrollTop = container.scrollHeight;
         }
